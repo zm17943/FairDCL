@@ -137,7 +137,7 @@ def main():
         main_worker(args.gpu, ngpus_per_node, args)
 
 
-def compute_cat(q_l1, q_l2, q_l3, q_l4, ids, female_ids, male_ids):
+def compute_cat(q_l1, q_l2, q_l3, q_l4, ids, urban_ids, rural_ids):
     new_batch_joint = []
     new_batch_marginal = []
     new_batch_joint3 = []
@@ -147,12 +147,12 @@ def compute_cat(q_l1, q_l2, q_l3, q_l4, ids, female_ids, male_ids):
     new_batch_joint1 = []
     new_batch_marginal1 = []
     for batch in range(q_l4.shape[0]):
-        if(ids[batch] in female_ids):
+        if(ids[batch] in urban_ids):
             sensitive = torch.cat((torch.ones([1, 16, 16]), torch.zeros([1, 16, 16])), 0)
             sensitive3 = torch.cat((torch.ones([1, 32, 32]), torch.zeros([1, 32, 32])), 0)
             sensitive2 = torch.cat((torch.ones([1, 64, 64]), torch.zeros([1, 64, 64])), 0)
             sensitive1 = torch.cat((torch.ones([1, 128, 128]), torch.zeros([1, 128, 128])), 0)
-        elif(ids[batch] in male_ids):
+        elif(ids[batch] in rural_ids):
             sensitive = torch.cat((torch.zeros([1, 16, 16]), torch.ones([1, 16, 16])), 0)
             sensitive3 = torch.cat((torch.zeros([1, 32, 32]), torch.ones([1, 32, 32])), 0)
             sensitive2 = torch.cat((torch.zeros([1, 64, 64]), torch.ones([1, 64, 64])), 0)
