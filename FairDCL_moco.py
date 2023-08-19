@@ -230,12 +230,12 @@ def main_worker(gpu, ngpus_per_node, args):
 
     urban_ids = set(np.load('/scratch/mz2466/LoveDA_mixedD_moco/urban_ids.npy'))
     rural_ids = set(np.load('/scratch/mz2466/LoveDA_mixedD_moco/rural_ids.npy'))
-    #female_ids = set(np.load('/scratch/mz2466/Face/female_id.npy'))
-    #male_ids = set(np.load('/scratch/mz2466/Face/male_id.npy'))
-    Mine = moco.builder.Mine(input_size=2050, hidden_size1=2050, hidden_size2=200)
-    Mine3 = moco.builder.Mine3(input_size=1026, hidden_size1=1026, hidden_size2=100)
-    Mine2 = moco.builder.Mine2(input_size=514, hidden_size1=514, hidden_size2=50)
-    Mine1 = moco.builder.Mine1(input_size=258, hidden_size1=258, hidden_size2=20)
+    female_ids = set(np.load('/scratch/mz2466/Face/female_id.npy'))
+    male_ids = set(np.load('/scratch/mz2466/Face/male_id.npy'))
+    Mine = moco.builder.Mine(input_size=2050, hidden_size1=2050, hidden_size2=205, output_size=205)
+    Mine3 = moco.builder.Mine3(input_size=2050, hidden_size1=2050, hidden_size2=205, output_size=205)
+    Mine2 = moco.builder.Mine2(input_size=2050, hidden_size1=2050, hidden_size2=205, output_size=205)
+    Mine1 = moco.builder.Mine1(input_size=2050, hidden_size1=2050, hidden_size2=205, output_size=205)
 
 
     model.cuda()
@@ -266,17 +266,17 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.resume:
         ee = '18'
         if args.gpu is None:
-            checkpoint = torch.load('checkpoint10_mine_00'+ee+'.pth.tar')
-            checkpoint3 = torch.load('checkpoint10_mine3_00'+ee+'.pth.tar')
-            checkpoint2 = torch.load('checkpoint10_mine2_00'+ee+'.pth.tar')
-            checkpoint1 = torch.load('checkpoint10_mine1_00'+ee+'.pth.tar')
+            checkpoint = torch.load('checkpoint_mine_00'+ee+'.pth.tar')
+            checkpoint3 = torch.load('checkpoint_mine3_00'+ee+'.pth.tar')
+            checkpoint2 = torch.load('checkpoint_mine2_00'+ee+'.pth.tar')
+            checkpoint1 = torch.load('checkpoint_mine1_00'+ee+'.pth.tar')
         else:
             # Map model to be loaded to specified single gpu.
             loc = 'cuda:{}'.format(args.gpu)
-            checkpoint = torch.load('checkpoint10_mine_00'+ee+'.pth.tar', map_location=loc)
-            checkpoint3 = torch.load('checkpoint10_mine3_00'+ee+'.pth.tar', map_location=loc)
-            checkpoint2 = torch.load('checkpoint10_mine2_00'+ee+'.pth.tar', map_location=loc)
-            checkpoint1 = torch.load('checkpoint10_mine1_00'+ee+'.pth.tar', map_location=loc)
+            checkpoint = torch.load('checkpoint_mine_00'+ee+'.pth.tar', map_location=loc)
+            checkpoint3 = torch.load('checkpoint_mine3_00'+ee+'.pth.tar', map_location=loc)
+            checkpoint2 = torch.load('checkpoint_mine2_00'+ee+'.pth.tar', map_location=loc)
+            checkpoint1 = torch.load('checkpoint_mine1_00'+ee+'.pth.tar', map_location=loc)
         Mine.load_state_dict(checkpoint['state_dict'])
         Mine3.load_state_dict(checkpoint3['state_dict'])
         Mine2.load_state_dict(checkpoint2['state_dict'])
@@ -364,31 +364,31 @@ def main_worker(gpu, ngpus_per_node, args):
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=False, filename='checkpoint10_{:04d}.pth.tar'.format(epoch))
+            }, is_best=False, filename='checkpoint_{:04d}.pth.tar'.format(epoch))
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': Mine.state_dict(),
                 'optimizer' : optimizer_mine.state_dict(),
-            }, is_best=False, filename='checkpoint10_mine_{:04d}.pth.tar'.format(epoch))
+            }, is_best=False, filename='checkpoint_mine_{:04d}.pth.tar'.format(epoch))
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': Mine3.state_dict(),
                 'optimizer' : optimizer_mine3.state_dict(),
-            }, is_best=False, filename='checkpoint10_mine3_{:04d}.pth.tar'.format(epoch))
+            }, is_best=False, filename='checkpoint_mine3_{:04d}.pth.tar'.format(epoch))
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': Mine2.state_dict(),
                 'optimizer' : optimizer_mine2.state_dict(),
-            }, is_best=False, filename='checkpoint10_mine2_{:04d}.pth.tar'.format(epoch))
+            }, is_best=False, filename='checkpoint_mine2_{:04d}.pth.tar'.format(epoch))
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': Mine1.state_dict(),
                 'optimizer' : optimizer_mine1.state_dict(),
-            }, is_best=False, filename='checkpoint10_mine1_{:04d}.pth.tar'.format(epoch))
+            }, is_best=False, filename='checkpoint_mine1_{:04d}.pth.tar'.format(epoch))
 
 
 def train(train_loader, train_loader_mine, train_dataset_mine, model, Mine, Mine3, Mine2, Mine1, criterion, optimizer, optimizer_mine, optimizer_mine3, optimizer_mine2, optimizer_mine1, epoch, urban_ids, rural_ids, args):
@@ -430,7 +430,7 @@ def train(train_loader, train_loader_mine, train_dataset_mine, model, Mine, Mine
             images_mine[0] = images_mine[0].cuda(args.gpu, non_blocking=True)
             images_mine[1] = images_mine[1].cuda(args.gpu, non_blocking=True)
             if (j > 30):
-                train_loader_mine = torch.utils.data.DataLoader(train_dataset_mine, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=False, drop_last=True)
+                train_loader_mine = torch.utils.data.DataLoader(train_dataset_mine, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True, drop_last=True)
                 break
             q, q_l1, q_l2, q_l3, q_l4 = model(im_q=images_mine[0], im_k=images_mine[1], training_mine=True)
             
@@ -485,7 +485,7 @@ def train(train_loader, train_loader_mine, train_dataset_mine, model, Mine, Mine
         loss = criterion(output, target)
         SL_loss.append(loss.item())
         print("SL_Moco loss is: " + str(loss))
-        loss = loss - 10*loss_mine - 10*loss_mine3 - 10*loss_mine2 - 10*loss_mine1
+        loss = loss - loss_mine - loss_mine3 - loss_mine2 - loss_mine1
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
